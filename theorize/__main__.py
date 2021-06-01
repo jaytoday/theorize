@@ -6,6 +6,7 @@ from graph_client import GraphClient
 from datastore import DataStore
 from analyzer import Analyzer
 import utils
+import json
 import logging
 
 class Theorize():
@@ -25,11 +26,12 @@ class Theorize():
         logging.info("Getting historical swaps")
         start_date = str(int(utils.datetime_to_unix_timestamp(self.params.startTime)))
         end_date = str(int(utils.datetime_to_unix_timestamp(self.params.endTime)))
-        swaps = self.client.get_swaps(start_date, end_date, self.pairs, self.params.tokenList)
+        tokenList = json.loads(self.params.tokenList)
+        swaps = self.client.get_swaps(start_date, end_date, self.pairs, tokenList)
 
         token_total_list = [
             (symbol, amount * 10)
-            for (symbol, amount) in self.params.tokenList
+            for (symbol, amount) in tokenList
         ]
         logging.info("Getting accounts from historical swaps")
         accounts = self.analyzer.get_accounts(swaps, token_total_list)
@@ -61,8 +63,8 @@ class Theorize():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Theorize: Data Analysis of Onchain Trading Activity")
     parser.add_argument("-tokenList",
-        help="List of tokens to use for retrieving accounts. Example: [('AAVE', 100), ('SNX', 200), ('REN', 10000)] ",
-        default=[('AAVE', 100), ('SNX', 200), ('REN', 10000)])
+        help='List of tokens to use for retrieving accounts. Example: [["AAVE", 100], ["SNX", 200], ["REN", 10000]] ',
+        default='[["AAVE", 100], ["SNX", 200], ["REN", 10000]]')
     parser.add_argument("-startTime", help="Start Time", default='2021-01-01 00:00:00')
     parser.add_argument("-endTime", help="End Time", default='2021-01-02 00:00:00')
     args = parser.parse_args()
